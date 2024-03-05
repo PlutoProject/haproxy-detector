@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,23 +43,23 @@ public class ProxyWhitelist {
         Files.createDirectories(path.getParent());
         if (!Files.exists(path) || Files.isDirectory(path)) {
             Files.write(path, Arrays.asList(
-                "# List of allowed proxy IPs",
-                "#",
-                "# An empty whitelist will disallow all proxies.",
-                "# Each entry must be an valid IP address, domain name or CIDR.",
-                "# Domain names will be resolved only once at startup.",
-                "# Each domain can have multiple A/AAAA records, all of them will be allowed.",
-                "# CIDR prefixes are not allowed in domain names.",
-                "",
-                "127.0.0.0/8",
-                "::1/128"
+                    "# List of allowed proxy IPs",
+                    "#",
+                    "# An empty whitelist will disallow all proxies.",
+                    "# Each entry must be an valid IP address, domain name or CIDR.",
+                    "# Domain names will be resolved only once at startup.",
+                    "# Each domain can have multiple A/AAAA records, all of them will be allowed.",
+                    "# CIDR prefixes are not allowed in domain names.",
+                    "",
+                    "127.0.0.0/8",
+                    "::1/128"
             ), StandardCharsets.UTF_8);
         }
         return load(path);
     }
 
     public static Optional<ProxyWhitelist> load(Path path) throws IOException {
-        ArrayList<CIDR> list = new ArrayList<>();
+        ArrayList<CIDRWrapper> list = new ArrayList<>();
         try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             boolean first = true;
             String line;
@@ -67,26 +70,24 @@ public class ProxyWhitelist {
                 if (first && line.startsWith("YesIReallyWantToDisableWhitelistItsExtremelyDangerousButIKnowWhatIAmDoing")) {
                     return Optional.empty();
                 }
-                first =false;
-                list.addAll(CIDR.parse(line));
+
+                first = false;
+
+                list.add(new CIDRWrapper(line));
             }
         }
         return Optional.of(new ProxyWhitelist(list));
     }
 
-    private final List<CIDR> list;
+    private final List<CIDRWrapper> list;
 
-    private ProxyWhitelist(ArrayList<CIDR> list) {
-        this.list = list;
-    }
-
-    public ProxyWhitelist(List<CIDR> list) {
+    public ProxyWhitelist(List<CIDRWrapper> list) {
         this.list = new ArrayList<>(list);
     }
 
     public boolean matches(InetAddress addr) {
-        for (CIDR ip : list) {
-            if (ip.contains(addr)) {
+        for (CIDRWrapper cidrWrapper : list) {
+            if (cidrWrapper.check(addr)) {
                 return true;
             }
         }
@@ -101,4 +102,40 @@ public class ProxyWhitelist {
     public String toString() {
         return "ProxyWhitelist" + list;
     }
+
+
+    public static class CIDRWrapper {
+        private final String line;
+        private List<CIDR> cached;
+        private Instant cacheValidUntil;
+
+        public CIDRWrapper(String line) throws UnknownHostException {
+            this.line = line;
+            this.cached = new ArrayList<>();
+            this.cacheValidUntil = Instant.ofEpochMilli(0);
+            checkCache();
+        }
+
+        public void checkCache() throws UnknownHostException {
+            if (cacheValidUntil.isBefore(Instant.now())) {
+                this.cached = CIDR.parse(line);
+                this.cacheValidUntil = Instant.now().plus(5, ChronoUnit.MINUTES);
+            }
+        }
+
+        public boolean check(InetAddress address) {
+            try {
+                checkCache();
+            } catch (UnknownHostException e) {
+                System.out.println("[haproxy-detector-ria] UnknownHostException: " + e.getMessage() + ": for host: " + line);
+            }
+            for (CIDR cidr : cached) {
+                if (cidr.contains(address)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
 }
