@@ -119,7 +119,7 @@ public class ProxyWhitelist {
         public void checkCache() throws UnknownHostException {
             if (cacheValidUntil.isBefore(Instant.now())) {
                 this.cached = CIDR.parse(line);
-                this.cacheValidUntil = Instant.now().plus(5, ChronoUnit.MINUTES);
+                this.cacheValidUntil = Instant.now().plus(1, ChronoUnit.MINUTES);
             }
         }
 
