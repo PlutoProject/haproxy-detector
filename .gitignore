@@ -31,3 +31,4 @@ Thumbs.db
 *.iws
 
 .vscode/
+.gradle/
