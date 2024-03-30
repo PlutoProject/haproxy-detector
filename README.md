@@ -1,4 +1,10 @@
-# HAProxyDetector
+# haproxy-detector
+
+🔑 用于同时允许 HAProxy 协议和直连连接到服务器。
+
+---
+
+**以下是原 README：**
 
 [![](https://img.shields.io/github/downloads/andylizi/haproxy-detector/total?style=for-the-badge)](https://github.com/andylizi/haproxy-detector/releases) [![](https://img.shields.io/github/license/andylizi/haproxy-detector?style=for-the-badge)](https://github.com/andylizi/haproxy-detector/blob/master/LICENSE) [![](https://img.shields.io/bstats/servers/12604?label=Spigot%20Servers&style=for-the-badge)](https://bstats.org/plugin/bukkit/HAProxyDetector/12604) [![](https://img.shields.io/bstats/servers/12605?label=BC%20Servers&style=for-the-badge)](https://bstats.org/plugin/bungeecord/HAProxyDetector/12605) [![](https://img.shields.io/bstats/servers/14442?label=Velocity%20Servers&style=for-the-badge)](https://bstats.org/plugin/velocity/HAProxyDetector/14442)
 
