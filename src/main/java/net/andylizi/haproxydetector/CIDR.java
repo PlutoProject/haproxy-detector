@@ -14,6 +14,32 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class CIDR {
+    private final InetAddress addr;
+    private final int prefix;
+    private final BigInteger mask;
+    private final BigInteger network;
+    public CIDR(@NotNull InetAddress addr, int prefix) throws IllegalArgumentException {
+        this.addr = Objects.requireNonNull(addr);
+        this.prefix = prefix;
+
+        int bytesLen = addr.getAddress().length;
+        if (prefix < 0) throw new IllegalArgumentException("prefix must not be negative");
+        if (prefix > bytesLen * Byte.SIZE) throw new IllegalArgumentException("invalid prefix length");
+
+        byte[] buf = new byte[bytesLen];
+        Arrays.fill(buf, (byte) 0xFF);
+        this.mask = new BigInteger(1, buf).shiftRight(prefix).not();
+        this.network = new BigInteger(1, addr.getAddress()).and(mask);
+    }
+
+    private CIDR(@NotNull InetAddress addr) {
+        this(addr, addr.getAddress().length * Byte.SIZE);
+    }
+
+    CIDR(@NotNull String addr, int prefix) throws IllegalArgumentException, UnknownHostException {
+        this(InetAddress.getByName(addr), prefix);
+    }
+
     public static List<CIDR> parse(@NotNull String cidr) throws IllegalArgumentException, UnknownHostException {
         int idx = cidr.lastIndexOf('/');
         if (idx != -1) {
@@ -41,34 +67,6 @@ public final class CIDR {
             }
             return Stream.of(addresses).map(CIDR::new).collect(Collectors.toList());
         }
-    }
-
-    private final InetAddress addr;
-    private final int prefix;
-
-    private final BigInteger mask;
-    private final BigInteger network;
-
-    public CIDR(@NotNull InetAddress addr, int prefix) throws IllegalArgumentException {
-        this.addr = Objects.requireNonNull(addr);
-        this.prefix = prefix;
-
-        int bytesLen = addr.getAddress().length;
-        if (prefix < 0) throw new IllegalArgumentException("prefix must not be negative");
-        if (prefix > bytesLen * Byte.SIZE) throw new IllegalArgumentException("invalid prefix length");
-
-        byte[] buf = new byte[bytesLen];
-        Arrays.fill(buf, (byte) 0xFF);
-        this.mask = new BigInteger(1, buf).shiftRight(prefix).not();
-        this.network = new BigInteger(1, addr.getAddress()).and(mask);
-    }
-
-    private CIDR(@NotNull InetAddress addr) {
-        this(addr, addr.getAddress().length * Byte.SIZE);
-    }
-
-    CIDR(@NotNull String addr, int prefix) throws IllegalArgumentException, UnknownHostException {
-        this(InetAddress.getByName(addr), prefix);
     }
 
     public InetAddress getAddress() {

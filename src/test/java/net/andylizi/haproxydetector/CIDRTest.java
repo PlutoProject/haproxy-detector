@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CIDRTest {
     @Test
-    void parse() throws UnknownHostException  {
+    void parse() throws UnknownHostException {
         Function<CIDR, List<CIDR>> f = Collections::singletonList;
         assertEquals(f.apply(new CIDR("127.0.0.0", 8)), CIDR.parse("127.0.0.0/8"));
         assertEquals(f.apply(new CIDR("224.0.0.0", 4)), CIDR.parse("224.0.0.0/4"));

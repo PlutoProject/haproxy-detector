@@ -15,11 +15,11 @@ import java.net.SocketAddress;
 import java.util.List;
 
 public class HAProxyDetectorHandler extends ByteToMessageDecoder {
+    private final Logger logger;
+
     {
         setSingleDecode(true);
     }
-
-    private final Logger logger;
 
     public HAProxyDetectorHandler(@NotNull Logger logger) {
         this.logger = logger;

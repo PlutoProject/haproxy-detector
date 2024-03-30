@@ -3,10 +3,10 @@ package net.andylizi.haproxydetector.bukkit;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.injector.netty.ChannelListener;
-import com.comphenix.protocol.injector.netty.InjectionFactory;
 import com.comphenix.protocol.injector.netty.Injector;
-import com.comphenix.protocol.injector.netty.ProtocolInjector;
-import com.comphenix.protocol.injector.server.TemporaryPlayerFactory;
+import com.comphenix.protocol.injector.netty.channel.InjectionFactory;
+import com.comphenix.protocol.injector.netty.channel.NettyChannelInjector;
+import com.comphenix.protocol.injector.temporary.TemporaryPlayerFactory;
 import com.comphenix.protocol.reflect.FuzzyReflection;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -24,10 +24,12 @@ public class InjectionStrategy1 implements InjectionStrategy {
     private final Logger logger;
 
     private Field injectorFactoryField;
-    private ProtocolInjector injector;
+    private NettyChannelInjector injector;
     private InjectionFactory oldFactory;
 
-    public InjectionStrategy1(Logger logger) {this.logger = logger;}
+    public InjectionStrategy1(Logger logger) {
+        this.logger = logger;
+    }
 
     @Override
     public void inject() throws ReflectiveOperationException {
@@ -38,9 +40,9 @@ public class InjectionStrategy1 implements InjectionStrategy {
 
         ProtocolManager pm = ProtocolLibrary.getProtocolManager();
         Field injectorField = FuzzyReflection.fromObject(pm, true)
-                .getFieldByType("nettyInjector", ProtocolInjector.class);
+                .getFieldByType("nettyInjector", NettyChannelInjector.class);
         injectorField.setAccessible(true);
-        injector = (ProtocolInjector) injectorField.get(pm);
+        injector = (NettyChannelInjector) injectorField.get(pm);
 
         injectorFactoryField = FuzzyReflection.fromObject(injector, true)
                 .getFieldByType("factory", InjectionFactory.class);
@@ -67,6 +69,18 @@ public class InjectionStrategy1 implements InjectionStrategy {
             super(plugin);
         }
 
+        private static void inject(ChannelPipeline pipeline, ChannelHandler networkManager) {
+            synchronized (networkManager) {
+                HAProxyDetectorHandler detectorHandler = new HAProxyDetectorHandler(BukkitMain.logger,
+                        new HAProxyMessageHandler(networkManager));
+                try {
+                    pipeline.addAfter("timeout", "haproxy-detector", detectorHandler);
+                } catch (NoSuchElementException e) {
+                    pipeline.addFirst("haproxy-detector", detectorHandler);
+                }
+            }
+        }
+
         @Override
         public @NotNull Injector fromChannel(Channel channel,
                                              ChannelListener listener,
@@ -78,18 +92,6 @@ public class InjectionStrategy1 implements InjectionStrategy {
             }
 
             return super.fromChannel(channel, listener, playerFactory);
-        }
-
-        private static void inject(ChannelPipeline pipeline, ChannelHandler networkManager) {
-            synchronized (networkManager) {
-                HAProxyDetectorHandler detectorHandler = new HAProxyDetectorHandler(BukkitMain.logger,
-                        new HAProxyMessageHandler(networkManager));
-                try {
-                    pipeline.addAfter("timeout", "haproxy-detector", detectorHandler);
-                } catch (NoSuchElementException e) {
-                    pipeline.addFirst("haproxy-detector", detectorHandler);
-                }
-            }
         }
     }
 }

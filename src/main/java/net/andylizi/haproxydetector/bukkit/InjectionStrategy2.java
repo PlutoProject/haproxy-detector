@@ -19,7 +19,9 @@ public class InjectionStrategy2 implements InjectionStrategy {
     private ChannelInboundHandler injectorInitializer;
     private ChannelInboundHandler originalHandler;
 
-    public InjectionStrategy2(Logger logger) {this.logger = logger;}
+    public InjectionStrategy2(Logger logger) {
+        this.logger = logger;
+    }
 
     @Override
     public void inject() throws ReflectiveOperationException {
@@ -50,7 +52,7 @@ public class InjectionStrategy2 implements InjectionStrategy {
         this.originalHandler = (ChannelInboundHandler) handlerField.get(injectorInitializer);
 
         ChannelInboundHandler myHandler = (ChannelInboundHandler) Proxy.newProxyInstance(getClass().getClassLoader(),
-                new Class[] { ChannelInboundHandler.class },
+                new Class[]{ChannelInboundHandler.class},
                 (proxy, method, args) -> {
                     if ("channelActive".equals(method.getName())) {
                         ChannelHandlerContext ctx = (ChannelHandlerContext) args[0];

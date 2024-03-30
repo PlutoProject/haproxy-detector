@@ -29,9 +29,9 @@ import java.util.NoSuchElementException;
 import static net.andylizi.haproxydetector.ReflectionUtil.sneakyThrow;
 
 @Plugin(id = "haproxy-detector", name = "HAProxyDetector", version = "3.1.0-SNAPSHOT",
-    url = "https://github.com/andylizi/haproxy-detector",
-    description = "Enables proxied and direct connections both at the same time.",
-    authors = {"andylizi"})
+        url = "https://github.com/andylizi/haproxy-detector",
+        description = "Enables proxied and direct connections both at the same time.",
+        authors = {"andylizi"})
 public final class VelocityMain {
     private final ProxyServer server;
     private final Logger logger;
@@ -92,10 +92,10 @@ public final class VelocityMain {
         Class<?> holderType = holder.getClass();
 
         @SuppressWarnings("unchecked") ChannelInitializer<Channel> originalInitializer =
-            (ChannelInitializer<Channel>) holderType.getMethod("get").invoke(holder);
+                (ChannelInitializer<Channel>) holderType.getMethod("get").invoke(holder);
 
         DetectorInitializer<Channel> newInitializer =
-            new DetectorInitializer<>(logger, originalInitializer);
+                new DetectorInitializer<>(logger, originalInitializer);
         MethodHandle set = MethodHandles.lookup().unreflect(holderType.getMethod("set", ChannelInitializer.class));
         try {
             logger.info("Replacing channel initializer; you can safely ignore the following warning.");

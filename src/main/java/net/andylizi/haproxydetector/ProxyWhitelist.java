@@ -23,6 +23,11 @@ public class ProxyWhitelist {
     public static ProxyWhitelist whitelist = new ProxyWhitelist(new ArrayList<>(0));
 
     private static volatile InetAddress lastWarning;
+    private final List<CIDRWrapper> list;
+
+    public ProxyWhitelist(List<CIDRWrapper> list) {
+        this.list = new ArrayList<>(list);
+    }
 
     public static boolean check(SocketAddress addr) {
         if (whitelist == null) return true;
@@ -77,12 +82,6 @@ public class ProxyWhitelist {
             }
         }
         return Optional.of(new ProxyWhitelist(list));
-    }
-
-    private final List<CIDRWrapper> list;
-
-    public ProxyWhitelist(List<CIDRWrapper> list) {
-        this.list = new ArrayList<>(list);
     }
 
     public boolean matches(InetAddress addr) {

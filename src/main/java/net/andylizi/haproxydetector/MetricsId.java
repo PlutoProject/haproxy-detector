@@ -7,10 +7,12 @@ public final class MetricsId {
     public static String KEY_WHITELIST_COUNT = "whitelist_count";
     public static String KEY_PROTOCOLLIB_VERSION = "protocollib_version";
 
+    private MetricsId() {
+        throw new AssertionError();
+    }
+
     public static CustomChart createWhitelistCountChart() {
         return new SimplePie(KEY_WHITELIST_COUNT,
                 () -> ProxyWhitelist.whitelist == null ? "0" : Integer.toString(ProxyWhitelist.whitelist.size()));
     }
-
-    private MetricsId() {throw new AssertionError();}
 }

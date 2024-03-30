@@ -1,23 +1,21 @@
 package net.andylizi.haproxydetector.bukkit;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.comphenix.protocol.ProtocolLibrary;
-
 import com.comphenix.protocol.utility.MinecraftReflection;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
 import net.andylizi.haproxydetector.MetricsId;
 import net.andylizi.haproxydetector.ProxyWhitelist;
+import net.andylizi.haproxydetector.ReflectionUtil;
+import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bstats.bukkit.Metrics;
 
-import net.andylizi.haproxydetector.ReflectionUtil;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static net.andylizi.haproxydetector.ReflectionUtil.sneakyThrow;
 
@@ -25,6 +23,34 @@ public final class BukkitMain extends JavaPlugin {
     static Logger logger;
 
     private InjectionStrategy injectionStrategy;
+
+    // Use separated methods to make sure the strategy classes won't be loaded
+    // until they're actually used.
+    private static InjectionStrategy createInjectionStrategy1() throws ReflectiveOperationException {
+        return new InjectionStrategy1(logger);
+    }
+
+    private static InjectionStrategy createInjectionStrategy2() throws ReflectiveOperationException {
+        return new InjectionStrategy2(logger);
+    }
+
+    @SuppressWarnings("unchecked")
+    static ChannelHandler getNetworkManager(ChannelPipeline pipeline) {
+        Class<? extends ChannelHandler> networkManagerClass = (Class<? extends ChannelHandler>) MinecraftReflection.getNetworkManagerClass();
+        ChannelHandler networkManager = null;
+        for (Map.Entry<String, ChannelHandler> entry : pipeline) {
+            if (networkManagerClass.isAssignableFrom(entry.getValue().getClass())) {
+                networkManager = entry.getValue();
+                break;
+            }
+        }
+
+        if (networkManager == null) {
+            throw new IllegalArgumentException("NetworkManager not found in channel pipeline " + pipeline.names());
+        }
+
+        return networkManager;
+    }
 
     @Override
     public void onLoad() {
@@ -83,16 +109,6 @@ public final class BukkitMain extends JavaPlugin {
         }
     }
 
-    // Use separated methods to make sure the strategy classes won't be loaded
-    // until they're actually used.
-    private static InjectionStrategy createInjectionStrategy1() throws ReflectiveOperationException {
-        return new InjectionStrategy1(logger);
-    }
-
-    private static InjectionStrategy createInjectionStrategy2() throws ReflectiveOperationException {
-        return new InjectionStrategy2(logger);
-    }
-
     @Override
     public void onDisable() {
         if (injectionStrategy != null) {
@@ -101,23 +117,5 @@ public final class BukkitMain extends JavaPlugin {
             } catch (Throwable ignored) {
             }
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    static ChannelHandler getNetworkManager(ChannelPipeline pipeline) {
-        Class<? extends ChannelHandler> networkManagerClass = (Class<? extends ChannelHandler>) MinecraftReflection.getNetworkManagerClass();
-        ChannelHandler networkManager = null;
-        for (Map.Entry<String, ChannelHandler> entry : pipeline) {
-            if (networkManagerClass.isAssignableFrom(entry.getValue().getClass())) {
-                networkManager = entry.getValue();
-                break;
-            }
-        }
-
-        if (networkManager == null) {
-            throw new IllegalArgumentException("NetworkManager not found in channel pipeline " + pipeline.names());
-        }
-
-        return networkManager;
     }
 }

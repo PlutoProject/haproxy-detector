@@ -1,26 +1,20 @@
 /*
  * Copyright (C) 2020 Andy Li
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
  * later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Lesser Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 package net.andylizi.haproxydetector;
-
-import java.net.SocketAddress;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -30,6 +24,12 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.ProtocolDetectionResult;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.codec.haproxy.HAProxyProtocolVersion;
+
+import java.net.SocketAddress;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class HAProxyDetectorHandler extends ByteToMessageDecoder {
     private final Logger logger;
@@ -90,10 +90,10 @@ public class HAProxyDetectorHandler extends ByteToMessageDecoder {
                     }
                     break;
             }
-        }  catch (Throwable t) {  // stop BC from eating my exceptions
+        } catch (Throwable t) {  // stop BC from eating my exceptions
             if (logger != null)
                 logger.log(Level.WARNING, "Exception while detecting proxy", t);
-            else 
+            else
                 t.printStackTrace();
         }
     }

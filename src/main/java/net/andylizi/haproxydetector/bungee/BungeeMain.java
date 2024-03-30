@@ -16,6 +16,18 @@
  */
 package net.andylizi.haproxydetector.bungee;
 
+import com.google.common.collect.ForwardingSet;
+import io.netty.channel.*;
+import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
+import io.netty.util.AttributeKey;
+import net.andylizi.haproxydetector.HAProxyDetectorHandler;
+import net.andylizi.haproxydetector.MetricsId;
+import net.andylizi.haproxydetector.ProxyWhitelist;
+import net.md_5.bungee.api.config.ListenerInfo;
+import net.md_5.bungee.api.plugin.Listener;
+import net.md_5.bungee.api.plugin.Plugin;
+import org.bstats.bungeecord.Metrics;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -29,18 +41,6 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-
-import com.google.common.collect.ForwardingSet;
-import io.netty.channel.*;
-import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
-import io.netty.util.AttributeKey;
-import net.andylizi.haproxydetector.HAProxyDetectorHandler;
-import net.andylizi.haproxydetector.MetricsId;
-import net.andylizi.haproxydetector.ProxyWhitelist;
-import net.md_5.bungee.api.config.ListenerInfo;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.api.plugin.Plugin;
-import org.bstats.bungeecord.Metrics;
 
 import static net.andylizi.haproxydetector.ReflectionUtil.sneakyThrow;
 
