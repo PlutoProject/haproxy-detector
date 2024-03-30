@@ -2,6 +2,8 @@ package net.andylizi.haproxydetector.bukkit;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.error.BasicErrorReporter;
+import com.comphenix.protocol.error.ErrorReporter;
 import com.comphenix.protocol.injector.netty.ChannelListener;
 import com.comphenix.protocol.injector.netty.Injector;
 import com.comphenix.protocol.injector.netty.channel.InjectionFactory;
@@ -13,6 +15,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
 import net.andylizi.haproxydetector.HAProxyDetectorHandler;
 import net.andylizi.haproxydetector.ReflectionUtil;
+import org.bukkit.Server;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,7 +52,7 @@ public class InjectionStrategy1 implements InjectionStrategy {
         injectorFactoryField.setAccessible(true);
 
         oldFactory = (InjectionFactory) injectorFactoryField.get(injector);
-        InjectionFactory newFactory = new HAProxyInjectorFactory(oldFactory.getPlugin());
+        InjectionFactory newFactory = new HAProxyInjectorFactory(oldFactory.getPlugin(), oldFactory.getPlugin().getServer());
         ReflectionUtil.copyState(InjectionFactory.class, oldFactory, newFactory);
         injectorFactoryField.set(injector, newFactory);
     }
@@ -65,8 +68,8 @@ public class InjectionStrategy1 implements InjectionStrategy {
     }
 
     static class HAProxyInjectorFactory extends InjectionFactory {
-        public HAProxyInjectorFactory(Plugin plugin) {
-            super(plugin);
+        public HAProxyInjectorFactory(Plugin plugin, Server server) {
+            super(plugin, server, new BasicErrorReporter());
         }
 
         private static void inject(ChannelPipeline pipeline, ChannelHandler networkManager) {
