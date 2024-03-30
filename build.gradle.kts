@@ -40,4 +40,5 @@ dependencies {
 
 tasks.shadowJar {
     archiveClassifier = ""
+    relocate("org.bstats", "net.andylizi.haproxydetector.bstats")
 }
